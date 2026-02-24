@@ -77,4 +77,17 @@ public class OrderFacade {
             })
             .toList();
     }
+
+    public List<OrderInfo> getAllOrders() {
+        List<Order> orders = orderService.getAllOrders();
+        return orders.stream()
+            .map(order -> {
+                List<OrderItem> items = orderService.getOrderItems(order.getId());
+                List<OrderItemInfo> itemInfos = items.stream()
+                    .map(OrderItemInfo::from)
+                    .toList();
+                return OrderInfo.of(order, itemInfos);
+            })
+            .toList();
+    }
 }

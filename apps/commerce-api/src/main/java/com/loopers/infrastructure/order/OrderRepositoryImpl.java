@@ -28,4 +28,9 @@ public class OrderRepositoryImpl implements OrderRepository {
     public List<Order> findAllByUserId(Long userId) {
         return orderJpaRepository.findAllByUserId(userId);
     }
+
+    @Override
+    public List<Order> findAll() {
+        return orderJpaRepository.findAll();
+    }
 }

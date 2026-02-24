@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Component
 public class ProductLikeService {
@@ -37,5 +39,10 @@ public class ProductLikeService {
     @Transactional(readOnly = true)
     public boolean isLiked(Long userId, Long productId) {
         return productLikeRepository.findByUserIdAndProductId(userId, productId).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductLike> getLikedProducts(Long userId) {
+        return productLikeRepository.findAllByUserId(userId);
     }
 }
