@@ -34,4 +34,9 @@ public class FakeOrderRepository implements OrderRepository {
             .filter(order -> order.getUserId().equals(userId))
             .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Order> findAll() {
+        return new ArrayList<>(store.values());
+    }
 }

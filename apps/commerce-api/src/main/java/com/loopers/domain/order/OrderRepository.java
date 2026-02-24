@@ -7,4 +7,5 @@ public interface OrderRepository {
     Order save(Order order);
     Optional<Order> findById(Long id);
     List<Order> findAllByUserId(Long userId);
+    List<Order> findAll();
 }

@@ -27,6 +27,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<Product> getProductsByBrandId(Long brandId) {
         return productRepository.findAllByBrandId(brandId);
     }

@@ -3,6 +3,7 @@ package com.loopers.domain.like;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,5 +42,12 @@ public class FakeProductLikeRepository implements ProductLikeRepository {
         return store.values().stream()
             .filter(like -> like.getProductId().equals(productId))
             .count();
+    }
+
+    @Override
+    public List<ProductLike> findAllByUserId(Long userId) {
+        return store.values().stream()
+            .filter(like -> like.getUserId().equals(userId))
+            .toList();
     }
 }
