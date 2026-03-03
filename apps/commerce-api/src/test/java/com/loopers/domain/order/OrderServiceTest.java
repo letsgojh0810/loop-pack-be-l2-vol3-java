@@ -16,23 +16,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class OrderServiceTest {
 
     private FakeOrderRepository orderRepository;
-    private FakeOrderItemRepository orderItemRepository;
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
         orderRepository = new FakeOrderRepository();
-        orderItemRepository = new FakeOrderItemRepository();
-        orderService = new OrderService(orderRepository, orderItemRepository);
+        orderService = new OrderService(orderRepository);
     }
 
     @DisplayName("주문 생성 시,")
     @Nested
     class CreateOrder {
 
-        @DisplayName("유효한 userId와 항목이 주어지면, 주문이 생성되고 항목에 orderId가 할당된다.")
+        @DisplayName("유효한 userId와 항목이 주어지면, 주문이 생성되고 항목이 주문에 포함된다.")
         @Test
-        void createsOrder_andAssignsOrderIdToItems() {
+        void createsOrder_withItems() {
             // arrange
             Long userId = 1L;
             List<OrderItem> items = List.of(
@@ -48,7 +46,7 @@ class OrderServiceTest {
                 () -> assertThat(order.getId()).isNotNull(),
                 () -> assertThat(order.getUserId()).isEqualTo(userId),
                 () -> assertThat(order.getTotalAmount()).isEqualTo(5000 * 2 + 3000 * 1),
-                () -> items.forEach(item -> assertThat(item.getOrderId()).isEqualTo(order.getId()))
+                () -> assertThat(order.getItems()).hasSize(2)
             );
         }
     }

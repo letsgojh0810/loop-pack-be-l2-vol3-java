@@ -20,7 +20,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
+    @Column(name = "order_id", insertable = false, updatable = false)
     private Long orderId;
 
     @Column(name = "product_id", nullable = false)
@@ -68,10 +68,6 @@ public class OrderItem {
             throw new CoreException(ErrorType.BAD_REQUEST, "수량은 1 이상이어야 합니다.");
         }
         return new OrderItem(productId, brandName, productName, price, quantity);
-    }
-
-    public void assignOrderId(Long orderId) {
-        this.orderId = orderId;
     }
 
     @PrePersist
