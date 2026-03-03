@@ -13,17 +13,11 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
 
     @Transactional
     public Order createOrder(Long userId, List<OrderItem> items) {
         Order order = Order.create(userId, items);
-        Order savedOrder = orderRepository.save(order);
-
-        items.forEach(item -> item.assignOrderId(savedOrder.getId()));
-        orderItemRepository.saveAll(items);
-
-        return savedOrder;
+        return orderRepository.save(order);
     }
 
     @Transactional(readOnly = true)
@@ -34,7 +28,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public List<OrderItem> getOrderItems(Long orderId) {
-        return orderItemRepository.findAllByOrderId(orderId);
+        return getOrder(orderId).getItems();
     }
 
     @Transactional(readOnly = true)

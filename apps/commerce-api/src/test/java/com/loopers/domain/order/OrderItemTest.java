@@ -5,8 +5,6 @@ import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -106,21 +104,4 @@ class OrderItemTest {
         }
     }
 
-    @DisplayName("orderId 할당 시,")
-    @Nested
-    class AssignOrderId {
-
-        @DisplayName("orderId가 정상적으로 설정된다.")
-        @Test
-        void assignsOrderId_correctly() {
-            // arrange
-            OrderItem item = OrderItem.createSnapshot(1L, "브랜드", "상품", 1000, 1);
-
-            // act
-            item.assignOrderId(42L);
-
-            // assert
-            assertThat(item.getOrderId()).isEqualTo(42L);
-        }
-    }
 }

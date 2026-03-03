@@ -3,7 +3,6 @@ package com.loopers.application.order;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.brand.FakeBrandRepository;
-import com.loopers.domain.order.FakeOrderItemRepository;
 import com.loopers.domain.order.FakeOrderRepository;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.product.FakeProductRepository;
@@ -35,11 +34,10 @@ class OrderFacadeTest {
         fakeBrandRepository = new FakeBrandRepository();
         fakeProductRepository = new FakeProductRepository();
         FakeOrderRepository fakeOrderRepository = new FakeOrderRepository();
-        FakeOrderItemRepository fakeOrderItemRepository = new FakeOrderItemRepository();
 
         BrandService brandService = new BrandService(fakeBrandRepository);
         ProductService productService = new ProductService(fakeProductRepository);
-        OrderService orderService = new OrderService(fakeOrderRepository, fakeOrderItemRepository);
+        OrderService orderService = new OrderService(fakeOrderRepository);
 
         orderFacade = new OrderFacade(productService, brandService, orderService);
     }

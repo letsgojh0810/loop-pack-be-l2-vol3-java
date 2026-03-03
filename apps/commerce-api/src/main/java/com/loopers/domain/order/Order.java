@@ -3,10 +3,14 @@ package com.loopers.domain.order;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -19,9 +23,13 @@ public class Order extends BaseEntity {
     @Column(name = "total_amount", nullable = false)
     private int totalAmount;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "order_id")
+    private List<OrderItem> items = new ArrayList<>();
+
     protected Order() {}
 
-    private Order(Long userId, int totalAmount) {
+    private Order(Long userId, int totalAmount, List<OrderItem> items) {
         if (userId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
         }
@@ -30,6 +38,7 @@ public class Order extends BaseEntity {
         }
         this.userId = userId;
         this.totalAmount = totalAmount;
+        this.items = items;
     }
 
     public static Order create(Long userId, List<OrderItem> items) {
@@ -42,7 +51,7 @@ public class Order extends BaseEntity {
         int totalAmount = items.stream()
             .mapToInt(item -> item.getPrice() * item.getQuantity())
             .sum();
-        return new Order(userId, totalAmount);
+        return new Order(userId, totalAmount, items);
     }
 
     public Long getUserId() {
@@ -51,5 +60,9 @@ public class Order extends BaseEntity {
 
     public int getTotalAmount() {
         return totalAmount;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
     }
 }
