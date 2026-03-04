@@ -12,6 +12,7 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class OrderFacade {
     private final OrderService orderService;
     private final CouponService couponService;
 
+    @Transactional
     public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId) {
         List<OrderItem> orderItems = new ArrayList<>();
 
