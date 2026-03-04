@@ -47,4 +47,9 @@ public class FakeUserCouponRepository implements UserCouponRepository {
             .filter(uc -> uc.getCouponId().equals(couponId))
             .collect(Collectors.toList());
     }
+
+    @Override
+    public Optional<UserCoupon> findByIdForUpdate(Long id) {
+        return Optional.ofNullable(store.get(id));
+    }
 }

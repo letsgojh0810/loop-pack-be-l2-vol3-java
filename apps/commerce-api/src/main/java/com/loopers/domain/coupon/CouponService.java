@@ -35,7 +35,7 @@ public class CouponService {
 
     @Transactional
     public UserCoupon getValidatedUserCoupon(Long userCouponId, Long userId, int originalAmount) {
-        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+        UserCoupon userCoupon = userCouponRepository.findByIdForUpdate(userCouponId)
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "발급된 쿠폰을 찾을 수 없습니다."));
 
         userCoupon.validate(userId);
@@ -46,6 +46,23 @@ public class CouponService {
         coupon.validateMinOrderAmount(originalAmount);
 
         return userCoupon;
+    }
+
+    // 쿠폰 검증과 사용을 하나의 트랜잭션에서 원자적으로 처리 (비관적 락)
+    @Transactional
+    public int validateAndUse(Long userCouponId, Long userId, int originalAmount) {
+        UserCoupon userCoupon = userCouponRepository.findByIdForUpdate(userCouponId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "발급된 쿠폰을 찾을 수 없습니다."));
+
+        userCoupon.validate(userId);
+
+        Coupon coupon = couponRepository.findById(userCoupon.getCouponId())
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
+
+        coupon.validateMinOrderAmount(originalAmount);
+        userCoupon.use();
+
+        return coupon.calculateDiscount(originalAmount);
     }
 
     @Transactional(readOnly = true)

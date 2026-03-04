@@ -2,9 +2,7 @@ package com.loopers.application.order;
 
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
-import com.loopers.domain.coupon.Coupon;
 import com.loopers.domain.coupon.CouponService;
-import com.loopers.domain.coupon.UserCoupon;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
@@ -57,11 +55,8 @@ public class OrderFacade {
 
         Order order;
         if (couponId != null) {
-            UserCoupon userCoupon = couponService.getValidatedUserCoupon(couponId, userId, originalAmount);
-            Coupon coupon = couponService.getCoupon(userCoupon.getCouponId());
-            int discountAmount = coupon.calculateDiscount(originalAmount);
+            int discountAmount = couponService.validateAndUse(couponId, userId, originalAmount);
             order = orderService.createOrder(userId, orderItems, discountAmount);
-            userCoupon.use();
         } else {
             order = orderService.createOrder(userId, orderItems);
         }
