@@ -55,4 +55,9 @@ public class FakeProductRepository implements ProductRepository {
         }
         return result;
     }
+
+    @Override
+    public Optional<Product> findByIdForUpdate(Long id) {
+        return Optional.ofNullable(store.get(id));
+    }
 }

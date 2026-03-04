@@ -41,7 +41,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
         @Valid @RequestBody OrderV1Dto.CreateRequest request
     ) {
         UserInfo currentUser = userFacade.getMe(loginId, password);
-        OrderInfo info = orderFacade.createOrder(currentUser.id(), request.toOrderCreateItems());
+        OrderInfo info = orderFacade.createOrder(currentUser.id(), request.toOrderCreateItems(), request.couponId());
         return ApiResponse.success(OrderV1Dto.OrderResponse.from(info));
     }
 

@@ -16,7 +16,9 @@ public class OrderV1Dto {
     public record CreateRequest(
         @NotEmpty(message = "주문 상품 목록은 비어있을 수 없습니다.")
         @Valid
-        List<OrderItemRequest> items
+        List<OrderItemRequest> items,
+
+        Long couponId
     ) {
         public List<OrderCreateItem> toOrderCreateItems() {
             return items.stream()
@@ -56,6 +58,8 @@ public class OrderV1Dto {
     public record OrderResponse(
         Long orderId,
         Long userId,
+        int originalAmount,
+        int discountAmount,
         int totalAmount,
         List<OrderItemResponse> items,
         ZonedDateTime createdAt
@@ -64,6 +68,8 @@ public class OrderV1Dto {
             return new OrderResponse(
                 info.orderId(),
                 info.userId(),
+                info.originalAmount(),
+                info.discountAmount(),
                 info.totalAmount(),
                 info.items().stream()
                     .map(OrderItemResponse::from)

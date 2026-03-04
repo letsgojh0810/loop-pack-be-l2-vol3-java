@@ -61,7 +61,7 @@ public class ProductService {
 
     @Transactional
     public void decreaseStock(Long productId, int quantity) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdForUpdate(productId)
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
         product.decreaseStock(quantity);
     }
