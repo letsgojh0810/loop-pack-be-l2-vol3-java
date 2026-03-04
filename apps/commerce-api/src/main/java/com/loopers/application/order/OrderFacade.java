@@ -2,6 +2,9 @@ package com.loopers.application.order;
 
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
+import com.loopers.domain.coupon.Coupon;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.coupon.UserCoupon;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
@@ -22,8 +25,9 @@ public class OrderFacade {
     private final ProductService productService;
     private final BrandService brandService;
     private final OrderService orderService;
+    private final CouponService couponService;
 
-    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items) {
+    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId) {
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderCreateItem createItem : items) {
@@ -47,7 +51,21 @@ public class OrderFacade {
             orderItems.add(orderItem);
         }
 
-        Order order = orderService.createOrder(userId, orderItems);
+        int originalAmount = orderItems.stream()
+            .mapToInt(item -> item.getPrice() * item.getQuantity())
+            .sum();
+
+        Order order;
+        if (couponId != null) {
+            UserCoupon userCoupon = couponService.getValidatedUserCoupon(couponId, userId, originalAmount);
+            Coupon coupon = couponService.getCoupon(userCoupon.getCouponId());
+            int discountAmount = coupon.calculateDiscount(originalAmount);
+            order = orderService.createOrder(userId, orderItems, discountAmount);
+            userCoupon.use();
+        } else {
+            order = orderService.createOrder(userId, orderItems);
+        }
+
         List<OrderItem> savedItems = orderService.getOrderItems(order.getId());
         List<OrderItemInfo> itemInfos = savedItems.stream()
             .map(OrderItemInfo::from)
