@@ -31,6 +31,8 @@ public class OrderAdminV1Dto {
     public record OrderResponse(
         Long orderId,
         Long userId,
+        int originalAmount,
+        int discountAmount,
         int totalAmount,
         List<OrderItemResponse> items,
         ZonedDateTime createdAt
@@ -39,6 +41,8 @@ public class OrderAdminV1Dto {
             return new OrderResponse(
                 info.orderId(),
                 info.userId(),
+                info.originalAmount(),
+                info.discountAmount(),
                 info.totalAmount(),
                 info.items().stream()
                     .map(OrderItemResponse::from)

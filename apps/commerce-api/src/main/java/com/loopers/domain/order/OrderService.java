@@ -20,6 +20,12 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    @Transactional
+    public Order createOrder(Long userId, List<OrderItem> items, int discountAmount) {
+        Order order = Order.create(userId, items, discountAmount);
+        return orderRepository.save(order);
+    }
+
     @Transactional(readOnly = true)
     public Order getOrder(Long orderId) {
         return orderRepository.findById(orderId)

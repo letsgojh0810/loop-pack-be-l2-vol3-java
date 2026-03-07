@@ -2,6 +2,7 @@ package com.loopers.application.order;
 
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
+import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
@@ -11,6 +12,7 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +24,10 @@ public class OrderFacade {
     private final ProductService productService;
     private final BrandService brandService;
     private final OrderService orderService;
+    private final CouponService couponService;
 
-    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items) {
+    @Transactional
+    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId) {
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderCreateItem createItem : items) {
@@ -47,7 +51,18 @@ public class OrderFacade {
             orderItems.add(orderItem);
         }
 
-        Order order = orderService.createOrder(userId, orderItems);
+        int originalAmount = orderItems.stream()
+            .mapToInt(item -> item.getPrice() * item.getQuantity())
+            .sum();
+
+        Order order;
+        if (couponId != null) {
+            int discountAmount = couponService.validateAndUse(couponId, userId, originalAmount);
+            order = orderService.createOrder(userId, orderItems, discountAmount);
+        } else {
+            order = orderService.createOrder(userId, orderItems);
+        }
+
         List<OrderItem> savedItems = orderService.getOrderItems(order.getId());
         List<OrderItemInfo> itemInfos = savedItems.stream()
             .map(OrderItemInfo::from)
