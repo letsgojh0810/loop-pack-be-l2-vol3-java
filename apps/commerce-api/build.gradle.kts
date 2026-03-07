@@ -6,6 +6,9 @@ dependencies {
     implementation(project(":supports:logging"))
     implementation(project(":supports:monitoring"))
 
+    // security (for password encoding)
+    implementation("org.springframework.security:spring-security-crypto")
+
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -19,4 +22,7 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+
+    // arch test
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }
