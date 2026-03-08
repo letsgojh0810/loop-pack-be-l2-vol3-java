@@ -11,6 +11,7 @@ public record OrderInfo(
     int originalAmount,
     int discountAmount,
     int totalAmount,
+    Long userCouponId,
     List<OrderItemInfo> items,
     ZonedDateTime createdAt
 ) {
@@ -21,6 +22,7 @@ public record OrderInfo(
             order.getOriginalAmount(),
             order.getDiscountAmount(),
             order.getTotalAmount(),
+            order.getUserCouponId(),
             items,
             order.getCreatedAt()
         );
