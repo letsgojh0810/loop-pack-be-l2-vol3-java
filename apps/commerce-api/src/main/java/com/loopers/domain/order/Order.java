@@ -29,13 +29,16 @@ public class Order extends BaseEntity {
     @Column(name = "total_amount", nullable = false)
     private int totalAmount;
 
+    @Column(name = "user_coupon_id")
+    private Long userCouponId;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "order_id")
     private List<OrderItem> items = new ArrayList<>();
 
     protected Order() {}
 
-    private Order(Long userId, int originalAmount, int discountAmount, List<OrderItem> items) {
+    private Order(Long userId, int originalAmount, int discountAmount, Long userCouponId, List<OrderItem> items) {
         if (userId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
         }
@@ -46,6 +49,7 @@ public class Order extends BaseEntity {
         this.originalAmount = originalAmount;
         this.discountAmount = discountAmount;
         this.totalAmount = originalAmount - discountAmount;
+        this.userCouponId = userCouponId;
         this.items = items;
     }
 
@@ -59,10 +63,10 @@ public class Order extends BaseEntity {
         int originalAmount = items.stream()
             .mapToInt(item -> item.getPrice() * item.getQuantity())
             .sum();
-        return new Order(userId, originalAmount, 0, items);
+        return new Order(userId, originalAmount, 0, null, items);
     }
 
-    public static Order create(Long userId, List<OrderItem> items, int discountAmount) {
+    public static Order create(Long userId, List<OrderItem> items, int discountAmount, Long userCouponId) {
         if (userId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
         }
@@ -72,7 +76,7 @@ public class Order extends BaseEntity {
         int originalAmount = items.stream()
             .mapToInt(item -> item.getPrice() * item.getQuantity())
             .sum();
-        return new Order(userId, originalAmount, discountAmount, items);
+        return new Order(userId, originalAmount, discountAmount, userCouponId, items);
     }
 
     public Long getUserId() {
@@ -89,6 +93,10 @@ public class Order extends BaseEntity {
 
     public int getTotalAmount() {
         return totalAmount;
+    }
+
+    public Long getUserCouponId() {
+        return userCouponId;
     }
 
     public List<OrderItem> getItems() {

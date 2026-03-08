@@ -58,7 +58,7 @@ public class OrderFacade {
         Order order;
         if (couponId != null) {
             int discountAmount = couponService.validateAndUse(couponId, userId, originalAmount);
-            order = orderService.createOrder(userId, orderItems, discountAmount);
+            order = orderService.createOrder(userId, orderItems, discountAmount, couponId);
         } else {
             order = orderService.createOrder(userId, orderItems);
         }

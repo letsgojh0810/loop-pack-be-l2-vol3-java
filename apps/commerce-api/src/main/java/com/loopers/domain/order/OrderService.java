@@ -21,8 +21,8 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(Long userId, List<OrderItem> items, int discountAmount) {
-        Order order = Order.create(userId, items, discountAmount);
+    public Order createOrder(Long userId, List<OrderItem> items, int discountAmount, Long userCouponId) {
+        Order order = Order.create(userId, items, discountAmount, userCouponId);
         return orderRepository.save(order);
     }
 
