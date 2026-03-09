@@ -8,6 +8,8 @@ public interface ProductRepository {
     Optional<Product> findById(Long id);
     Optional<Product> findByIdForUpdate(Long id);
     List<Product> findAll();
+    List<Product> findAllOrderByLikeCountDesc();
     List<Product> findAllByBrandId(Long brandId);
+    List<Product> findAllByBrandIdOrderByLikeCountDesc(Long brandId);
     List<Product> findAllByIds(List<Long> ids);
 }

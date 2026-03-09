@@ -34,6 +34,13 @@ public class FakeProductRepository implements ProductRepository {
     }
 
     @Override
+    public List<Product> findAllOrderByLikeCountDesc() {
+        return store.values().stream()
+            .sorted((a, b) -> Long.compare(b.getLikeCount(), a.getLikeCount()))
+            .toList();
+    }
+
+    @Override
     public List<Product> findAllByBrandId(Long brandId) {
         List<Product> result = new ArrayList<>();
         for (Product product : store.values()) {
@@ -42,6 +49,14 @@ public class FakeProductRepository implements ProductRepository {
             }
         }
         return result;
+    }
+
+    @Override
+    public List<Product> findAllByBrandIdOrderByLikeCountDesc(Long brandId) {
+        return store.values().stream()
+            .filter(p -> brandId.equals(p.getBrandId()))
+            .sorted((a, b) -> Long.compare(b.getLikeCount(), a.getLikeCount()))
+            .toList();
     }
 
     @Override
