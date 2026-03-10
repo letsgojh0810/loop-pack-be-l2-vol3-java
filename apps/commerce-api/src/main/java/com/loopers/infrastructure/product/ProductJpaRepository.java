@@ -12,6 +12,8 @@ import java.util.Optional;
 
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByBrandId(Long brandId);
+    List<Product> findAllByOrderByLikeCountDesc();
+    List<Product> findAllByBrandIdOrderByLikeCountDesc(Long brandId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")

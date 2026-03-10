@@ -5,10 +5,16 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "products")
+@Table(
+    name = "products",
+    indexes = {
+        @Index(name = "idx_products_brand_id_like_count", columnList = "brand_id, like_count DESC")
+    }
+)
 public class Product extends BaseEntity {
 
     @Column(name = "brand_id", nullable = false)
@@ -29,6 +35,9 @@ public class Product extends BaseEntity {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Column(name = "like_count", nullable = false)
+    private long likeCount = 0;
+
     protected Product() {}
 
     public Product(Long brandId, String name, String description, int price, int stock, String imageUrl) {
@@ -43,6 +52,16 @@ public class Product extends BaseEntity {
         this.price = price;
         this.stock = stock;
         this.imageUrl = imageUrl;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 
     public void decreaseStock(int quantity) {
@@ -114,5 +133,9 @@ public class Product extends BaseEntity {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
     }
 }

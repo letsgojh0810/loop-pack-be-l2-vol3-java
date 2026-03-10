@@ -28,12 +28,26 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findAllOrderByLikeCountDesc();
     }
 
     @Transactional(readOnly = true)
     public List<Product> getProductsByBrandId(Long brandId) {
-        return productRepository.findAllByBrandId(brandId);
+        return productRepository.findAllByBrandIdOrderByLikeCountDesc(brandId);
+    }
+
+    @Transactional
+    public void increaseLikeCount(Long productId) {
+        Product product = productRepository.findByIdForUpdate(productId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
+        product.increaseLikeCount();
+    }
+
+    @Transactional
+    public void decreaseLikeCount(Long productId) {
+        Product product = productRepository.findByIdForUpdate(productId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
+        product.decreaseLikeCount();
     }
 
     @Transactional

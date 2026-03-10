@@ -1,5 +1,8 @@
 package com.loopers.domain.like;
 
+import com.loopers.domain.product.FakeProductRepository;
+import com.loopers.domain.product.Product;
+import com.loopers.domain.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,14 +15,20 @@ class ProductLikeServiceTest {
 
     private ProductLikeService productLikeService;
     private FakeProductLikeRepository fakeProductLikeRepository;
+    private FakeProductRepository fakeProductRepository;
 
     private static final Long USER_ID = 1L;
-    private static final Long PRODUCT_ID = 100L;
+    private Long PRODUCT_ID;
 
     @BeforeEach
     void setUp() {
         fakeProductLikeRepository = new FakeProductLikeRepository();
-        productLikeService = new ProductLikeService(fakeProductLikeRepository);
+        fakeProductRepository = new FakeProductRepository();
+        ProductService productService = new ProductService(fakeProductRepository);
+        productLikeService = new ProductLikeService(fakeProductLikeRepository, productService);
+
+        Product product = fakeProductRepository.save(new Product(1L, "테스트상품", "설명", 1000, 10, null));
+        PRODUCT_ID = product.getId();
     }
 
     @DisplayName("좋아요 등록 시,")
