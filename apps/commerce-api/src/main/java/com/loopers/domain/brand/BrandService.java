@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
@@ -28,6 +30,12 @@ public class BrandService {
     public Brand getBrand(Long id) {
         return brandRepository.findById(id)
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "브랜드를 찾을 수 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Brand> getBrandsByIds(List<Long> ids) {
+        return brandRepository.findAllByIds(ids).stream()
+            .collect(Collectors.toMap(Brand::getId, b -> b));
     }
 
     @Transactional(readOnly = true)

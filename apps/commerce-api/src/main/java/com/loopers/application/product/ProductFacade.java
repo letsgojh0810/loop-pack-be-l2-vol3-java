@@ -5,6 +5,7 @@ import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.like.ProductLikeService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
+import com.loopers.domain.product.ProductSort;
 import com.loopers.infrastructure.cache.CacheConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -12,7 +13,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Component
@@ -30,17 +33,21 @@ public class ProductFacade {
         return ProductInfo.of(product, brand, product.getLikeCount(), liked);
     }
 
-    @Cacheable(cacheNames = CacheConfig.PRODUCT_LIST, key = "#brandId != null ? #brandId : 'all'")
-    public List<ProductInfo> getProducts(Long brandId) {
-        List<Product> products = brandId != null
-            ? productService.getProductsByBrandId(brandId)
-            : productService.getAllProducts();
-        return products.stream()
-            .map(product -> {
-                Brand brand = brandService.getBrand(product.getBrandId());
-                return ProductInfo.of(product, brand, product.getLikeCount(), false);
-            })
-            .toList();
+    @Cacheable(
+        cacheNames = CacheConfig.PRODUCT_LIST,
+        key = "(#brandId ?: 'all') + '_' + #sort + '_' + #page + '_' + #size"
+    )
+    public List<ProductInfo> getProducts(Long brandId, ProductSort sort, int page, int size) {
+        List<Product> products = productService.getProducts(brandId, sort, page, size);
+
+        List<Long> brandIds = products.stream().map(Product::getBrandId).distinct().toList();
+        Map<Long, Brand> brandMap = brandService.getBrandsByIds(brandIds);
+
+        List<ProductInfo> result = new ArrayList<>();
+        for (Product product : products) {
+            result.add(ProductInfo.of(product, brandMap.get(product.getBrandId()), product.getLikeCount(), false));
+        }
+        return result;
     }
 
     @Caching(evict = {
