@@ -2,6 +2,7 @@ package com.loopers.interfaces.api.product;
 
 import com.loopers.application.product.ProductFacade;
 import com.loopers.application.product.ProductInfo;
+import com.loopers.domain.product.ProductSort;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -42,10 +43,13 @@ public class ProductAdminV1Controller implements ProductAdminV1ApiSpec {
     @Override
     public ApiResponse<ProductAdminV1Dto.ProductListResponse> getProducts(
         @RequestHeader(ADMIN_LDAP_HEADER) String ldap,
-        @RequestParam(required = false) Long brandId
+        @RequestParam(required = false) Long brandId,
+        @RequestParam(defaultValue = "latest") String sort,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
     ) {
         validateAdmin(ldap);
-        List<ProductInfo> infos = productFacade.getProducts(brandId);
+        List<ProductInfo> infos = productFacade.getProducts(brandId, ProductSort.from(sort), page, size);
         return ApiResponse.success(ProductAdminV1Dto.ProductListResponse.from(infos));
     }
 

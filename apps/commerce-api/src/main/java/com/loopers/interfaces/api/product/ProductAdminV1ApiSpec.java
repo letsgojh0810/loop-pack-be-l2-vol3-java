@@ -11,7 +11,10 @@ public interface ProductAdminV1ApiSpec {
     @Operation(summary = "상품 목록 조회", description = "모든 상품 목록을 조회합니다.")
     ApiResponse<ProductAdminV1Dto.ProductListResponse> getProducts(
         @Parameter(description = "어드민 LDAP", required = true) String ldap,
-        @Parameter(description = "브랜드 ID (선택)") Long brandId
+        @Parameter(description = "브랜드 ID (선택)") Long brandId,
+        @Parameter(description = "정렬 기준: latest, price_asc, likes_desc") String sort,
+        @Parameter(description = "페이지 번호") int page,
+        @Parameter(description = "페이지당 수") int size
     );
 
     @Operation(summary = "상품 상세 조회", description = "상품 ID로 상품 상세 정보를 조회합니다.")

@@ -4,4 +4,13 @@ datasources:
     type: prometheus
     access: proxy
     url: http://prometheus:9090
+    isDefault: false
+
+  - name: InfluxDB-k6
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
     isDefault: true
+    database: k6
+    jsonData:
+      httpMode: GET

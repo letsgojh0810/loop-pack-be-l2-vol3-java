@@ -1,5 +1,6 @@
 package com.loopers.application.like;
 
+import com.loopers.application.product.ProductFacade;
 import com.loopers.application.product.ProductInfo;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
@@ -21,20 +22,23 @@ public class ProductLikeFacade {
     private final ProductService productService;
     private final ProductLikeService productLikeService;
     private final BrandService brandService;
+    private final ProductFacade productFacade;
 
     public void like(Long userId, Long productId) {
         productService.getProduct(productId);
         productLikeService.like(userId, productId);
+        productFacade.evictProductCache(productId);
     }
 
     public void unlike(Long userId, Long productId) {
         productLikeService.unlike(userId, productId);
+        productFacade.evictProductCache(productId);
     }
 
     public ProductLikeInfo getLikeInfo(Long userId, Long productId) {
-        long likeCount = productLikeService.getLikeCount(productId);
+        Product product = productService.getProduct(productId);
         boolean liked = productLikeService.isLiked(userId, productId);
-        return ProductLikeInfo.of(productId, likeCount, liked);
+        return ProductLikeInfo.of(productId, product.getLikeCount(), liked);
     }
 
     public List<ProductInfo> getLikedProducts(Long userId) {
@@ -44,8 +48,7 @@ public class ProductLikeFacade {
                 try {
                     Product product = productService.getProduct(like.getProductId());
                     Brand brand = brandService.getBrand(product.getBrandId());
-                    long likeCount = productLikeService.getLikeCount(product.getId());
-                    return ProductInfo.of(product, brand, likeCount, true);
+                    return ProductInfo.of(product, brand, product.getLikeCount(), true);
                 } catch (CoreException e) {
                     return null;
                 }
