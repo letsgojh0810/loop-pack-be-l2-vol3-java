@@ -12,7 +12,14 @@ import jakarta.persistence.Table;
 @Table(
     name = "products",
     indexes = {
-        @Index(name = "idx_products_brand_id_like_count", columnList = "brand_id, like_count DESC")
+        // 전체 조회 정렬 인덱스
+        @Index(name = "idx_products_created_at",  columnList = "created_at DESC"),
+        @Index(name = "idx_products_price",       columnList = "price ASC"),
+        @Index(name = "idx_products_like_count",  columnList = "like_count DESC"),
+        // 브랜드 필터 + 정렬 복합 인덱스 (brand_id 선행 컬럼으로 range scan 후 정렬)
+        @Index(name = "idx_products_brand_created_at", columnList = "brand_id, created_at DESC"),
+        @Index(name = "idx_products_brand_price",      columnList = "brand_id, price ASC"),
+        @Index(name = "idx_products_brand_like_count", columnList = "brand_id, like_count DESC")
     }
 )
 public class Product extends BaseEntity {
