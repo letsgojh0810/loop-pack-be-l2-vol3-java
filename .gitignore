@@ -39,3 +39,6 @@ out/
 ### Kotlin ###
 .kotlin
 CLAUDE.md
+.claude/worktrees/zen-zhukovsky/
+.DS_Store
+docker/grafana/provisioning/dashboards/dashboard.yml
