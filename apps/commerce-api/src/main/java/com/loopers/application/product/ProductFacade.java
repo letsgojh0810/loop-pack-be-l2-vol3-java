@@ -78,11 +78,4 @@ public class ProductFacade {
         productService.delete(productId);
     }
 
-    @Caching(evict = {
-        @CacheEvict(cacheNames = CacheConfig.PRODUCT_DETAIL, key = "#productId"),
-        @CacheEvict(cacheNames = CacheConfig.PRODUCT_LIST, allEntries = true)
-    })
-    public void evictProductCache(Long productId) {
-        // 좋아요 변경 시 캐시 무효화용
-    }
 }

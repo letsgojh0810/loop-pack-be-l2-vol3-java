@@ -1,6 +1,5 @@
 package com.loopers.application.like;
 
-import com.loopers.application.product.ProductFacade;
 import com.loopers.application.product.ProductInfo;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.BrandService;
@@ -22,17 +21,16 @@ public class ProductLikeFacade {
     private final ProductService productService;
     private final ProductLikeService productLikeService;
     private final BrandService brandService;
-    private final ProductFacade productFacade;
 
     public void like(Long userId, Long productId) {
         productService.getProduct(productId);
         productLikeService.like(userId, productId);
-        productFacade.evictProductCache(productId);
+        // 좋아요 수는 변경 빈도가 높아 캐시 무효화 대신 TTL 만료에 맡김 (약간의 stale 허용)
     }
 
     public void unlike(Long userId, Long productId) {
         productLikeService.unlike(userId, productId);
-        productFacade.evictProductCache(productId);
+        // 좋아요 수는 변경 빈도가 높아 캐시 무효화 대신 TTL 만료에 맡김 (약간의 stale 허용)
     }
 
     public ProductLikeInfo getLikeInfo(Long userId, Long productId) {
