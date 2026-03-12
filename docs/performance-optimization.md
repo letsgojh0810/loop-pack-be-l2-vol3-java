@@ -244,13 +244,44 @@ public ProductInfo getProductDetail(Long productId, Long userId) { ... }
 )
 public List<ProductInfo> getProducts(Long brandId, ProductSort sort, int page, int size) { ... }
 
-// 상품 수정/삭제 시 캐시 무효화
+// 상품 수정/삭제 시 캐시 무효화 (빈도 낮음 → 전체 무효화 허용)
 @Caching(evict = {
     @CacheEvict(cacheNames = CacheConfig.PRODUCT_DETAIL, key = "#productId"),
     @CacheEvict(cacheNames = CacheConfig.PRODUCT_LIST, allEntries = true)
 })
 public ProductInfo updateProduct(...) { ... }
 ```
+
+#### 캐시 무효화 전략: 이벤트 성격에 따라 분리
+
+처음에는 좋아요 등록/취소 시에도 `@CacheEvict`로 캐시를 즉시 무효화했다. 하지만 이 방식에는 문제가 있다.
+
+목록 캐시 키는 `(brandId)_(sort)_(page)_(size)` 조합이므로, 특정 상품이 포함된 캐시 키를 특정할 수 없다. 결국 `allEntries=true`로 전체를 날려야 하는데, 좋아요는 빈도가 높은 이벤트라 매번 전체 목록 캐시를 무효화하면 캐시가 의미없어진다.
+
+```java
+// 초기 구현 (제거)
+public void like(Long userId, Long productId) {
+    productLikeService.like(userId, productId);
+    productFacade.evictProductCache(productId); // 좋아요마다 전체 목록 캐시 무효화
+}
+```
+
+**변경 후**: 좋아요 수는 TTL 만료에 맡기는 전략으로 전환했다.
+
+```java
+// 변경 후
+public void like(Long userId, Long productId) {
+    productLikeService.like(userId, productId);
+    // 좋아요 수는 변경 빈도가 높아 캐시 무효화 대신 TTL 만료에 맡김 (약간의 stale 허용)
+}
+```
+
+| 이벤트 | 빈도 | 전략 |
+|--------|------|------|
+| 상품 수정/삭제 | 낮음 | 이벤트 기반 즉시 무효화 |
+| 좋아요 등록/취소 | 높음 | TTL 만료 (5분 stale 허용) |
+
+좋아요 수는 "정확한 실시간 수치"보다 "대략적인 인기도"에 가까운 데이터이므로 약간의 stale은 허용 가능하다고 판단했다.
 
 ---
 
@@ -669,3 +700,10 @@ Spring Boot의 `management.server.port`는 Actuator 전용 포트다. 앱 API와
 
 **7. MCP로 개발 생산성 향상**
 MySQL MCP 서버를 Claude Code에 연결하면 `docker exec` 없이 자연어로 EXPLAIN 분석, 데이터 확인이 가능해진다. Docker가 실행 중일 때만 연결되므로 인프라가 먼저 떠있어야 한다.
+
+**8. 캐시 무효화 전략은 이벤트 변경 빈도를 기준으로 결정해야 한다**
+처음에는 좋아요 변경 시에도 즉시 무효화하도록 구현했다. 하지만 좋아요는 빈도가 높은 이벤트라 매번 전체 목록 캐시를 날리면 캐시 효과가 퇴색된다. 또한 목록 캐시는 어떤 키에 특정 상품이 들어있는지 알 수 없어 `allEntries=true`로 전체를 날릴 수밖에 없다는 구조적 한계도 있다.
+
+결론적으로 변경 빈도와 데이터의 정확도 요구 수준을 함께 고려해야 한다.
+- **빈도 낮음 + 정확도 중요** (상품 수정/삭제) → 이벤트 기반 즉시 무효화
+- **빈도 높음 + stale 허용** (좋아요 수) → TTL 만료에 맡기기
