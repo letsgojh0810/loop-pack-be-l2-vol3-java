@@ -3,6 +3,7 @@ package com.loopers.interfaces.api.order;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.application.order.OrderItemInfo;
 import com.loopers.application.order.OrderCreateItem;
+import com.loopers.domain.order.OrderStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -61,6 +62,7 @@ public class OrderV1Dto {
         int originalAmount,
         int discountAmount,
         int totalAmount,
+        OrderStatus status,
         List<OrderItemResponse> items,
         ZonedDateTime createdAt
     ) {
@@ -71,6 +73,7 @@ public class OrderV1Dto {
                 info.originalAmount(),
                 info.discountAmount(),
                 info.totalAmount(),
+                info.status(),
                 info.items().stream()
                     .map(OrderItemResponse::from)
                     .toList(),

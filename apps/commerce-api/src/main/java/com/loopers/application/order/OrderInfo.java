@@ -1,6 +1,7 @@
 package com.loopers.application.order;
 
 import com.loopers.domain.order.Order;
+import com.loopers.domain.order.OrderStatus;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -12,6 +13,7 @@ public record OrderInfo(
     int discountAmount,
     int totalAmount,
     Long userCouponId,
+    OrderStatus status,
     List<OrderItemInfo> items,
     ZonedDateTime createdAt
 ) {
@@ -23,6 +25,7 @@ public record OrderInfo(
             order.getDiscountAmount(),
             order.getTotalAmount(),
             order.getUserCouponId(),
+            order.getStatus(),
             items,
             order.getCreatedAt()
         );
