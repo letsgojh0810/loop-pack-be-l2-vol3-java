@@ -9,6 +9,11 @@ dependencies {
     // security (for password encoding)
     implementation("org.springframework.security:spring-security-crypto")
 
+    // feign + resilience4j
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")

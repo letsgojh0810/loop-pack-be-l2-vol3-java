@@ -7,10 +7,16 @@ import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.payment.CardType;
 import com.loopers.domain.payment.Payment;
 import com.loopers.domain.payment.PaymentService;
+import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.domain.product.ProductService;
 import com.loopers.infrastructure.pg.PgClient;
+import com.loopers.infrastructure.pg.PgPaymentRequest;
+import com.loopers.infrastructure.pg.PgPaymentResponse;
+import com.loopers.infrastructure.pg.PgTransactionDetailResponse;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,12 +29,16 @@ import java.util.List;
 @Component
 public class PaymentFacade {
 
+    private static final String CALLBACK_URL = "http://localhost:8080/api/v1/payments/callback";
+
     private final PaymentService paymentService;
     private final OrderService orderService;
     private final ProductService productService;
     private final PgClient pgClient;
 
     @Transactional
+    @CircuitBreaker(name = "pgCircuitBreaker", fallbackMethod = "requestPaymentFallback")
+    @Retry(name = "pgRetry")
     public PaymentInfo requestPayment(Long userId, Long orderId, CardType cardType, String cardNo) {
         // 1. 주문 존재 확인 + 본인 주문인지 + PENDING_PAYMENT 상태인지 확인
         Order order = orderService.getOrder(orderId);
@@ -49,24 +59,41 @@ public class PaymentFacade {
             orderId, userId, cardType, cardNo, order.getTotalAmount()
         );
 
-        // TODO: PG 연동 후 실제 결제 요청 처리 필요
-        // PgPaymentRequest pgRequest = new PgPaymentRequest(
-        //     orderId, cardType.name(), cardNo, order.getTotalAmount(), callbackUrl
-        // );
-        // PgPaymentResponse pgResponse = pgClient.requestPayment(pgRequest);
+        // 4. PG 결제 요청
+        PgPaymentRequest pgRequest = new PgPaymentRequest(
+            String.valueOf(orderId),
+            cardType.name(),
+            cardNo,
+            (long) order.getTotalAmount(),
+            CALLBACK_URL
+        );
+        PgPaymentResponse pgResponse = pgClient.requestPayment(String.valueOf(userId), pgRequest);
+        log.info("PG 결제 요청 결과: orderId={}, status={}", orderId, pgResponse.status());
 
         return PaymentInfo.from(payment);
     }
 
     @Transactional
-    public void handleCallback(String pgTransactionId, String status, String orderId, String message) {
+    public PaymentInfo requestPaymentFallback(Long userId, Long orderId, CardType cardType, String cardNo, Throwable t) {
+        log.warn("PG 결제 요청 실패 (fallback): orderId={}, error={}", orderId, t.getMessage());
+        paymentService.findPaymentByOrderId(orderId).ifPresent(payment -> {
+            if (payment.getStatus() == PaymentStatus.PENDING) {
+                paymentService.failPayment(payment.getId(), "PG 연결 실패: " + t.getMessage());
+                orderService.cancelOrder(orderId);
+            }
+        });
+        throw new CoreException(ErrorType.INTERNAL_ERROR, "결제 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+    }
+
+    @Transactional
+    public void handleCallback(String transactionKey, String status, String orderId, String cardType, String cardNo, Long amount, String reason) {
         // 콜백 처리: PG 결과에 따라 Payment/Order 상태 업데이트
         Long orderIdLong = Long.parseLong(orderId);
         Payment payment = paymentService.getPaymentByOrderId(orderIdLong);
 
         if ("SUCCESS".equals(status)) {
             // SUCCESS → completePayment + completeOrder + decreaseStock
-            paymentService.completePayment(payment.getId(), pgTransactionId);
+            paymentService.completePayment(payment.getId(), transactionKey);
             orderService.completeOrder(orderIdLong);
 
             Order order = orderService.getOrder(orderIdLong);
@@ -75,7 +102,7 @@ public class PaymentFacade {
             }
         } else {
             // 그 외 → failPayment + cancelOrder
-            paymentService.failPayment(payment.getId(), message);
+            paymentService.failPayment(payment.getId(), reason);
             orderService.cancelOrder(orderIdLong);
         }
     }
@@ -83,19 +110,25 @@ public class PaymentFacade {
     @Transactional
     public void syncPendingPayments() {
         // @Scheduled에서 호출 - PENDING 건들 PG 조회 후 상태 동기화
-        // TODO: PG 연동 후 실제 동기화 구현 필요
         List<Payment> pendingPayments = paymentService.getPendingPayments();
         log.info("PENDING 결제 동기화 대상: {}건", pendingPayments.size());
 
-        // for (Payment payment : pendingPayments) {
-        //     PgPaymentResponse response = pgClient.getPaymentByOrderId(payment.getOrderId());
-        //     if ("SUCCESS".equals(response.status())) {
-        //         paymentService.completePayment(payment.getId(), response.pgTransactionId());
-        //         orderService.completeOrder(payment.getOrderId());
-        //     } else if ("LIMIT_EXCEEDED".equals(response.status()) || "INVALID_CARD".equals(response.status())) {
-        //         paymentService.failPayment(payment.getId(), response.message());
-        //         orderService.cancelOrder(payment.getOrderId());
-        //     }
-        // }
+        for (Payment payment : pendingPayments) {
+            try {
+                PgTransactionDetailResponse response = pgClient.getPaymentByOrderId(
+                    String.valueOf(payment.getUserId()),
+                    String.valueOf(payment.getOrderId())
+                );
+                if ("SUCCESS".equals(response.status())) {
+                    paymentService.completePayment(payment.getId(), response.transactionKey());
+                    orderService.completeOrder(payment.getOrderId());
+                } else if ("LIMIT_EXCEEDED".equals(response.status()) || "INVALID_CARD".equals(response.status())) {
+                    paymentService.failPayment(payment.getId(), response.reason());
+                    orderService.cancelOrder(payment.getOrderId());
+                }
+            } catch (Exception e) {
+                log.warn("PENDING 결제 동기화 실패: paymentId={}, error={}", payment.getId(), e.getMessage());
+            }
+        }
     }
 }

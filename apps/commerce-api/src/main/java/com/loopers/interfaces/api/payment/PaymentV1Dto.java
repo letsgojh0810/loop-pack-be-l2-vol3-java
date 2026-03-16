@@ -20,16 +20,22 @@ public class PaymentV1Dto {
     ) {}
 
     public record CallbackRequest(
-        @NotBlank(message = "PG 트랜잭션 ID는 필수입니다.")
-        String pgTransactionId,
-
-        @NotBlank(message = "결제 상태는 필수입니다.")
-        String status,
+        @NotBlank(message = "트랜잭션 키는 필수입니다.")
+        String transactionKey,
 
         @NotBlank(message = "주문 ID는 필수입니다.")
         String orderId,
 
-        String message
+        String cardType,
+
+        String cardNo,
+
+        Long amount,
+
+        @NotBlank(message = "결제 상태는 필수입니다.")
+        String status,
+
+        String reason
     ) {}
 
     public record PaymentResponse(

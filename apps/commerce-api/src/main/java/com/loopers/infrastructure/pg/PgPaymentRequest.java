@@ -1,9 +1,9 @@
 package com.loopers.infrastructure.pg;
 
 public record PgPaymentRequest(
-    Long orderId,
+    String orderId,
     String cardType,
     String cardNo,
-    int amount,
+    Long amount,
     String callbackUrl
 ) {}

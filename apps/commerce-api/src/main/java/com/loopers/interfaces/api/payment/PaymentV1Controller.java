@@ -60,10 +60,13 @@ public class PaymentV1Controller implements PaymentV1ApiSpec {
         @Valid @RequestBody PaymentV1Dto.CallbackRequest request
     ) {
         paymentFacade.handleCallback(
-            request.pgTransactionId(),
+            request.transactionKey(),
             request.status(),
             request.orderId(),
-            request.message()
+            request.cardType(),
+            request.cardNo(),
+            request.amount(),
+            request.reason()
         );
         return ApiResponse.success(null);
     }
