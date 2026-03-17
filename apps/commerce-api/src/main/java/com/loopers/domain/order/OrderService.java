@@ -58,16 +58,4 @@ public class OrderService {
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
-
-    @Transactional
-    public void completeOrder(Long orderId) {
-        Order order = getOrder(orderId);
-        order.complete();
-    }
-
-    @Transactional
-    public void cancelOrder(Long orderId) {
-        Order order = getOrder(orderId);
-        order.cancel();
-    }
 }
