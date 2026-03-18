@@ -37,6 +37,8 @@ public class OrderFacade {
                 throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다.");
             }
 
+            productService.decreaseStock(product.getId(), createItem.quantity());
+
             Brand brand = brandService.getBrand(product.getBrandId());
 
             OrderItem orderItem = OrderItem.createSnapshot(

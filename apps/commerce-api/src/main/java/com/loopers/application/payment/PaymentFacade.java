@@ -80,6 +80,11 @@ public class PaymentFacade {
             if (payment.getStatus() == PaymentStatus.PENDING) {
                 paymentService.failPayment(payment.getId(), "PG 연결 실패: " + t.getMessage());
                 orderService.cancelOrder(orderId);
+
+                Order order = orderService.getOrder(orderId);
+                for (OrderItem item : order.getItems()) {
+                    productService.increaseStock(item.getProductId(), item.getQuantity());
+                }
             }
         });
         throw new CoreException(ErrorType.INTERNAL_ERROR, "결제 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
@@ -92,18 +97,18 @@ public class PaymentFacade {
         Payment payment = paymentService.getPaymentByOrderId(orderIdLong);
 
         if ("SUCCESS".equals(status)) {
-            // SUCCESS → completePayment + completeOrder + decreaseStock
+            // SUCCESS → completePayment + completeOrder (재고는 주문 생성 시 이미 차감됨)
             paymentService.completePayment(payment.getId(), transactionKey);
             orderService.completeOrder(orderIdLong);
+        } else {
+            // 그 외 → failPayment + cancelOrder + increaseStock (재고 복구)
+            paymentService.failPayment(payment.getId(), reason);
+            orderService.cancelOrder(orderIdLong);
 
             Order order = orderService.getOrder(orderIdLong);
             for (OrderItem item : order.getItems()) {
-                productService.decreaseStock(item.getProductId(), item.getQuantity());
+                productService.increaseStock(item.getProductId(), item.getQuantity());
             }
-        } else {
-            // 그 외 → failPayment + cancelOrder
-            paymentService.failPayment(payment.getId(), reason);
-            orderService.cancelOrder(orderIdLong);
         }
     }
 
@@ -125,6 +130,11 @@ public class PaymentFacade {
                 } else if ("LIMIT_EXCEEDED".equals(response.status()) || "INVALID_CARD".equals(response.status())) {
                     paymentService.failPayment(payment.getId(), response.reason());
                     orderService.cancelOrder(payment.getOrderId());
+
+                    Order order = orderService.getOrder(payment.getOrderId());
+                    for (OrderItem item : order.getItems()) {
+                        productService.increaseStock(item.getProductId(), item.getQuantity());
+                    }
                 }
             } catch (Exception e) {
                 log.warn("PENDING 결제 동기화 실패: paymentId={}, error={}", payment.getId(), e.getMessage());

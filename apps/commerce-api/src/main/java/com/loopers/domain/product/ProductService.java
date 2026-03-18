@@ -84,4 +84,11 @@ public class ProductService {
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
         product.decreaseStock(quantity);
     }
+
+    @Transactional
+    public void increaseStock(Long productId, int quantity) {
+        Product product = productRepository.findByIdForUpdate(productId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
+        product.increaseStock(quantity);
+    }
 }
