@@ -42,6 +42,18 @@ public class OrderService {
         return orderRepository.findAllByUserId(userId);
     }
 
+    @Transactional
+    public void completeOrder(Long orderId) {
+        Order order = getOrder(orderId);
+        order.complete();
+    }
+
+    @Transactional
+    public void cancelOrder(Long orderId) {
+        Order order = getOrder(orderId);
+        order.cancel();
+    }
+
     @Transactional(readOnly = true)
     public List<Order> getAllOrders() {
         return orderRepository.findAll();

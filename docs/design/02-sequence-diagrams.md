@@ -198,6 +198,89 @@ sequenceDiagram
 
 ---
 
+## 4. 결제 흐름
+
+### 왜 이 다이어그램이 필요한가
+
+결제는 내부 시스템과 외부 PG가 함께 엮이는 흐름이다.
+PG는 비동기로 동작하므로 요청과 결과가 분리되고, 콜백이 유실될 수 있다.
+Resilience4j(CircuitBreaker + Retry)가 어느 지점에서 동작하는지, 재고 차감/복구 타이밍이 어디인지를 명확히 보여주는 게 핵심이다.
+
+### 다이어그램
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client
+    participant Controller as PaymentV1Controller
+    participant Facade as PaymentFacade
+    participant PaymentService as PaymentService
+    participant OrderService as OrderService
+    participant ProductService as ProductService
+    participant PG as PG Simulator
+
+    %% 결제 요청
+    Client->>Controller: POST /api/v1/payments<br/>{orderId, cardType, cardNo}
+    Controller->>Facade: requestPayment(userId, orderId, cardType, cardNo)
+
+    Note over Facade: @CircuitBreaker + @Retry
+
+    Facade->>OrderService: getOrder(orderId)
+    Note over Facade: 본인 주문 여부 확인<br/>PENDING_PAYMENT 상태 확인<br/>중복 결제 여부 확인
+
+    Facade->>PaymentService: createPayment() → PENDING
+    Facade->>PG: POST /api/v1/payments<br/>{orderId, cardType, cardNo, amount, callbackUrl}
+
+    alt PG 요청 성공 (ACCEPTED)
+        PG-->>Facade: {transactionKey, status: ACCEPTED}
+        Facade-->>Controller: PaymentInfo (PENDING)
+        Controller-->>Client: 201 Created
+    else PG 요청 실패 / 타임아웃 (Retry 소진)
+        Note over Facade: fallback 실행
+        Facade->>PaymentService: failPayment()
+        Facade->>OrderService: cancelOrder()
+        Facade->>ProductService: increaseStock() (재고 복구)
+        Facade-->>Client: 500 (결제 서비스 일시 오류)
+    end
+
+    %% PG 비동기 처리 후 콜백
+    Note over PG: 1~5초 후 비동기 처리 완료
+    PG->>Controller: POST /api/v1/payments/callback<br/>{transactionKey, orderId, status, reason}
+    Controller->>Facade: handleCallback(...)
+
+    alt status == SUCCESS
+        Facade->>PaymentService: completePayment(transactionKey)
+        Facade->>OrderService: completeOrder()
+        Note over Facade: 재고는 주문 생성 시 이미 차감됨
+    else status == LIMIT_EXCEEDED / INVALID_CARD
+        Facade->>PaymentService: failPayment(reason)
+        Facade->>OrderService: cancelOrder()
+        Facade->>ProductService: increaseStock() (재고 복구)
+    end
+    Controller-->>PG: 200 OK
+
+    %% 스케줄러 폴링
+    Note over Facade: 콜백 미수신 대비<br/>30초마다 스케줄러 실행
+    Facade->>PG: GET /api/v1/payments?orderId=xxx
+    alt SUCCESS
+        Facade->>PaymentService: completePayment()
+        Facade->>OrderService: completeOrder()
+    else LIMIT_EXCEEDED / INVALID_CARD
+        Facade->>PaymentService: failPayment()
+        Facade->>OrderService: cancelOrder()
+        Facade->>ProductService: increaseStock() (재고 복구)
+    end
+```
+
+### 이 구조에서 봐야 할 포인트
+
+1. **재고 차감은 주문 생성 시점에 선점한다.** 결제 도중 품절되는 최악의 UX를 방지하기 위해 주문 생성 시 차감하고, 결제 실패 시 복구한다.
+2. **PG는 비동기다.** 결제 요청 응답은 ACCEPTED(접수됨)일 뿐, 실제 결과는 콜백으로 온다. 콜백이 오기 전까지 Payment는 PENDING 상태다.
+3. **콜백 유실에 대비해 스케줄러가 있다.** 30초마다 PENDING 건을 PG에 직접 조회해서 동기화한다.
+4. **CircuitBreaker + Retry는 PG 요청 시점에만 적용된다.** PG가 불안정할 때 내부 시스템까지 연쇄 장애가 나지 않도록 보호한다.
+
+---
+
 ## 잠재 리스크
 
 | 리스크 | 영향 | 대안 |

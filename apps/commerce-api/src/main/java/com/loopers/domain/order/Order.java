@@ -6,6 +6,8 @@ import com.loopers.support.error.ErrorType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -32,6 +34,10 @@ public class Order extends BaseEntity {
     @Column(name = "user_coupon_id")
     private Long userCouponId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private OrderStatus status = OrderStatus.PENDING_PAYMENT;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "order_id")
     private List<OrderItem> items = new ArrayList<>();
@@ -50,6 +56,7 @@ public class Order extends BaseEntity {
         this.discountAmount = discountAmount;
         this.totalAmount = originalAmount - discountAmount;
         this.userCouponId = userCouponId;
+        this.status = OrderStatus.PENDING_PAYMENT;
         this.items = items;
     }
 
@@ -79,6 +86,20 @@ public class Order extends BaseEntity {
         return new Order(userId, originalAmount, discountAmount, userCouponId, items);
     }
 
+    public void complete() {
+        if (this.status != OrderStatus.PENDING_PAYMENT) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "결제 대기 상태의 주문만 완료 처리할 수 있습니다.");
+        }
+        this.status = OrderStatus.PAID;
+    }
+
+    public void cancel() {
+        if (this.status == OrderStatus.PAID) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 결제 완료된 주문은 취소할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+
     public Long getUserId() {
         return userId;
     }
@@ -97,6 +118,10 @@ public class Order extends BaseEntity {
 
     public Long getUserCouponId() {
         return userCouponId;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
     }
 
     public List<OrderItem> getItems() {
