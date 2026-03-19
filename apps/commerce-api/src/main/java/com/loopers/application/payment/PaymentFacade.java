@@ -6,6 +6,8 @@ import com.loopers.domain.order.OrderService;
 import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.payment.CardType;
 import com.loopers.domain.payment.Payment;
+import com.loopers.domain.payment.PaymentCancelRequest;
+import com.loopers.domain.payment.PaymentCancelRequestService;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.domain.product.ProductService;
@@ -35,6 +37,7 @@ public class PaymentFacade {
     private final OrderService orderService;
     private final ProductService productService;
     private final PgClient pgClient;
+    private final PaymentCancelRequestService paymentCancelRequestService;
 
     @Transactional
     @CircuitBreaker(name = "pgCircuitBreaker", fallbackMethod = "requestPaymentFallback")
@@ -78,13 +81,21 @@ public class PaymentFacade {
         log.warn("PG 결제 요청 실패 (fallback): orderId={}, error={}", orderId, t.getMessage());
         paymentService.findPaymentByOrderId(orderId).ifPresent(payment -> {
             if (payment.getStatus() == PaymentStatus.PENDING) {
-                paymentService.failPayment(payment.getId(), "PG 연결 실패: " + t.getMessage());
+                String failureReason = "PG 연결 실패: " + t.getMessage();
+                paymentService.failPayment(payment.getId(), failureReason);
                 orderService.cancelOrder(orderId);
 
                 Order order = orderService.getOrder(orderId);
                 for (OrderItem item : order.getItems()) {
                     productService.increaseStock(item.getProductId(), item.getQuantity());
                 }
+
+                // PG에서 실제로 결제가 완료됐을 수 있으므로 취소 요청을 저장해둔다
+                paymentCancelRequestService.createCancelRequest(
+                    orderId,
+                    payment.getPgTransactionId(),
+                    failureReason
+                );
             }
         });
         throw new CoreException(ErrorType.INTERNAL_ERROR, "결제 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
@@ -108,6 +119,27 @@ public class PaymentFacade {
             Order order = orderService.getOrder(orderIdLong);
             for (OrderItem item : order.getItems()) {
                 productService.increaseStock(item.getProductId(), item.getQuantity());
+            }
+        }
+    }
+
+    @Transactional
+    public void processPendingCancelRequests() {
+        java.util.List<PaymentCancelRequest> pendingCancelRequests = paymentCancelRequestService.getPendingCancelRequests();
+        log.info("PENDING 취소 요청 처리 대상: {}건", pendingCancelRequests.size());
+
+        for (PaymentCancelRequest cancelRequest : pendingCancelRequests) {
+            try {
+                if (cancelRequest.getPgTransactionId() == null) {
+                    log.info("pgTransactionId 없음 - 취소 완료 처리: orderId={}", cancelRequest.getOrderId());
+                    paymentCancelRequestService.completeCancelRequest(cancelRequest);
+                    continue;
+                }
+                pgClient.cancelPayment("system", cancelRequest.getPgTransactionId());
+                paymentCancelRequestService.completeCancelRequest(cancelRequest);
+                log.info("PG 취소 요청 성공: orderId={}, pgTransactionId={}", cancelRequest.getOrderId(), cancelRequest.getPgTransactionId());
+            } catch (Exception e) {
+                log.warn("PG 취소 요청 실패 (다음 스케줄 재시도): orderId={}, error={}", cancelRequest.getOrderId(), e.getMessage());
             }
         }
     }

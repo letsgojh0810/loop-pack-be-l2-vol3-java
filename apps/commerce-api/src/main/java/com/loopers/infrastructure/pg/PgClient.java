@@ -1,6 +1,7 @@
 package com.loopers.infrastructure.pg;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,5 +28,11 @@ public interface PgClient {
     PgTransactionDetailResponse getPaymentByOrderId(
         @RequestHeader("X-USER-ID") String userId,
         @RequestParam("orderId") String orderId
+    );
+
+    @DeleteMapping("/api/v1/payments/{transactionKey}")
+    void cancelPayment(
+        @RequestHeader("X-USER-ID") String userId,
+        @PathVariable("transactionKey") String transactionKey
     );
 }
