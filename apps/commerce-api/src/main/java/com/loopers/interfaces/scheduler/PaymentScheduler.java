@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.scheduler;
+package com.loopers.interfaces.scheduler;
 
 import com.loopers.application.payment.PaymentFacade;
 import lombok.RequiredArgsConstructor;
