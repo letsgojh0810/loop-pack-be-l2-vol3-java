@@ -1,6 +1,5 @@
 package com.loopers.application.like;
 
-import com.loopers.application.product.ProductFacade;
 import com.loopers.domain.brand.BrandService;
 import com.loopers.domain.brand.FakeBrandRepository;
 import com.loopers.domain.like.FakeProductLikeRepository;
@@ -33,9 +32,8 @@ class ProductLikeFacadeTest {
         fakeProductLikeRepository = new FakeProductLikeRepository();
         BrandService brandService = new BrandService(new FakeBrandRepository());
         ProductService productService = new ProductService(fakeProductRepository);
-        ProductLikeService productLikeService = new ProductLikeService(fakeProductLikeRepository, productService);
-        ProductFacade productFacade = new ProductFacade(productService, brandService, productLikeService);
-        productLikeFacade = new ProductLikeFacade(productService, productLikeService, brandService, productFacade);
+        ProductLikeService productLikeService = new ProductLikeService(fakeProductLikeRepository);
+        productLikeFacade = new ProductLikeFacade(productService, productLikeService, brandService, event -> {});
     }
 
     @DisplayName("좋아요 등록 시,")

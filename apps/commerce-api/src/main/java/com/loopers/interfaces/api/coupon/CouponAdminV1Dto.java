@@ -26,7 +26,9 @@ public class CouponAdminV1Dto {
         Integer minOrderAmount,
 
         @Min(value = 1, message = "유효 기간은 1 이상이어야 합니다.")
-        int validDays
+        int validDays,
+
+        Integer totalLimit
     ) {}
 
     public record UpdateRequest(

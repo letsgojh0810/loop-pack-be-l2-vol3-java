@@ -1,11 +1,11 @@
 package com.loopers.interfaces.api.coupon;
 
 import com.loopers.application.coupon.CouponFacade;
+import com.loopers.application.coupon.CouponIssueRequestInfo;
 import com.loopers.application.coupon.UserCouponInfo;
 import com.loopers.application.user.UserFacade;
 import com.loopers.application.user.UserInfo;
 import com.loopers.interfaces.api.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,5 +51,27 @@ public class CouponV1Controller implements CouponV1ApiSpec {
         UserInfo currentUser = userFacade.getMe(loginId, password);
         List<UserCouponInfo> infos = couponFacade.getMyUserCoupons(currentUser.id());
         return ApiResponse.success(CouponV1Dto.UserCouponListResponse.from(infos));
+    }
+
+    @PostMapping("/{couponId}/issue-async")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @Override
+    public ApiResponse<CouponV1Dto.CouponIssueRequestResponse> requestCouponIssueAsync(
+        @RequestHeader(HEADER_LOGIN_ID) String loginId,
+        @RequestHeader(HEADER_LOGIN_PW) String password,
+        @PathVariable Long couponId
+    ) {
+        UserInfo currentUser = userFacade.getMe(loginId, password);
+        CouponIssueRequestInfo info = couponFacade.requestCouponIssue(couponId, currentUser.id());
+        return ApiResponse.success(CouponV1Dto.CouponIssueRequestResponse.from(info));
+    }
+
+    @GetMapping("/issue-requests/{requestId}")
+    @Override
+    public ApiResponse<CouponV1Dto.CouponIssueRequestResponse> getIssueRequestStatus(
+        @PathVariable String requestId
+    ) {
+        CouponIssueRequestInfo info = couponFacade.getIssueRequestStatus(requestId);
+        return ApiResponse.success(CouponV1Dto.CouponIssueRequestResponse.from(info));
     }
 }

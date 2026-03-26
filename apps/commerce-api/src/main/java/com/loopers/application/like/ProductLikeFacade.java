@@ -40,9 +40,10 @@ public class ProductLikeFacade {
     }
 
     public ProductLikeInfo getLikeInfo(Long userId, Long productId) {
-        Product product = productService.getProduct(productId);
+        productService.getProduct(productId);
         boolean liked = productLikeService.isLiked(userId, productId);
-        return ProductLikeInfo.of(productId, product.getLikeCount(), liked);
+        long likeCount = productLikeService.getLikeCount(productId);
+        return ProductLikeInfo.of(productId, likeCount, liked);
     }
 
     public List<ProductInfo> getLikedProducts(Long userId) {

@@ -14,6 +14,7 @@ public interface UserCouponJpaRepository extends JpaRepository<UserCoupon, Long>
     List<UserCoupon> findAllByUserId(Long userId);
     boolean existsByUserIdAndCouponId(Long userId, Long couponId);
     List<UserCoupon> findAllByCouponId(Long couponId);
+    long countByCouponId(Long couponId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT uc FROM UserCoupon uc WHERE uc.id = :id")
