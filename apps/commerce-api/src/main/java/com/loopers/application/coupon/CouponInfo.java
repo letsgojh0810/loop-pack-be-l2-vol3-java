@@ -9,7 +9,8 @@ public record CouponInfo(
     CouponType type,
     int value,
     Integer minOrderAmount,
-    int validDays
+    int validDays,
+    Integer totalLimit
 ) {
     public static CouponInfo from(Coupon coupon) {
         return new CouponInfo(
@@ -18,7 +19,8 @@ public record CouponInfo(
             coupon.getType(),
             coupon.getValue(),
             coupon.getMinOrderAmount(),
-            coupon.getValidDays()
+            coupon.getValidDays(),
+            coupon.getTotalLimit()
         );
     }
 }
