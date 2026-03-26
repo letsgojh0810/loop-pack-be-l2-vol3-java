@@ -11,6 +11,7 @@ import com.loopers.domain.product.ProductService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class OrderFacade {
     private final BrandService brandService;
     private final OrderService orderService;
     private final CouponService couponService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId) {
@@ -68,7 +70,9 @@ public class OrderFacade {
             .map(OrderItemInfo::from)
             .toList();
 
-        return OrderInfo.of(order, itemInfos);
+        OrderInfo orderInfo = OrderInfo.of(order, itemInfos);
+        eventPublisher.publishEvent(new OrderCreatedEvent(order.getId(), userId));
+        return orderInfo;
     }
 
     public OrderInfo getOrder(Long orderId) {
