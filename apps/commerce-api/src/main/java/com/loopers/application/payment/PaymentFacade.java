@@ -19,6 +19,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ public class PaymentFacade {
     private final OrderService orderService;
     private final ProductService productService;
     private final PgClient pgClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     @CircuitBreaker(name = "pgCircuitBreaker", fallbackMethod = "requestPaymentFallback")
@@ -95,6 +97,7 @@ public class PaymentFacade {
             // SUCCESS → completePayment + completeOrder (재고는 주문 생성 시 이미 차감됨)
             paymentService.completePayment(payment.getId(), transactionKey);
             orderService.completeOrder(orderIdLong);
+            eventPublisher.publishEvent(new PaymentCompletedEvent(orderIdLong, payment.getUserId(), payment.getAmount()));
         } else {
             // 그 외 → failPayment + cancelOrder + increaseStock (재고 복구)
             paymentService.failPayment(payment.getId(), reason);
@@ -122,6 +125,7 @@ public class PaymentFacade {
                 if ("SUCCESS".equals(response.status())) {
                     paymentService.completePayment(payment.getId(), response.transactionKey());
                     orderService.completeOrder(payment.getOrderId());
+                    eventPublisher.publishEvent(new PaymentCompletedEvent(payment.getOrderId(), payment.getUserId(), payment.getAmount()));
                 } else if ("LIMIT_EXCEEDED".equals(response.status()) || "INVALID_CARD".equals(response.status())) {
                     paymentService.failPayment(payment.getId(), response.reason());
                     orderService.cancelOrder(payment.getOrderId());

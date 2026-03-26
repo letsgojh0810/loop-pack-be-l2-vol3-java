@@ -37,7 +37,7 @@ class ProductFacadeTest {
 
         BrandService brandService = new BrandService(fakeBrandRepository);
         ProductService productService = new ProductService(fakeProductRepository);
-        productLikeService = new ProductLikeService(fakeProductLikeRepository, productService);
+        productLikeService = new ProductLikeService(fakeProductLikeRepository);
 
         productFacade = new ProductFacade(productService, brandService, productLikeService);
     }

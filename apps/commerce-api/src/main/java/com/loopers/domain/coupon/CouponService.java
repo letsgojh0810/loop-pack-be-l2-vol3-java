@@ -77,8 +77,8 @@ public class CouponService {
     }
 
     @Transactional
-    public Coupon registerCoupon(String name, CouponType type, int value, Integer minOrderAmount, int validDays) {
-        Coupon coupon = new Coupon(name, type, value, minOrderAmount, validDays);
+    public Coupon registerCoupon(String name, CouponType type, int value, Integer minOrderAmount, int validDays, Integer totalLimit) {
+        Coupon coupon = new Coupon(name, type, value, minOrderAmount, validDays, totalLimit);
         return couponRepository.save(coupon);
     }
 

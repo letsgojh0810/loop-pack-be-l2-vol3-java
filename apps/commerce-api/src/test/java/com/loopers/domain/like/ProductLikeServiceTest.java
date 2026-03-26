@@ -2,7 +2,6 @@ package com.loopers.domain.like;
 
 import com.loopers.domain.product.FakeProductRepository;
 import com.loopers.domain.product.Product;
-import com.loopers.domain.product.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,8 +23,7 @@ class ProductLikeServiceTest {
     void setUp() {
         fakeProductLikeRepository = new FakeProductLikeRepository();
         fakeProductRepository = new FakeProductRepository();
-        ProductService productService = new ProductService(fakeProductRepository);
-        productLikeService = new ProductLikeService(fakeProductLikeRepository, productService);
+        productLikeService = new ProductLikeService(fakeProductLikeRepository);
 
         Product product = fakeProductRepository.save(new Product(1L, "테스트상품", "설명", 1000, 10, null));
         PRODUCT_ID = product.getId();

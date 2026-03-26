@@ -29,9 +29,16 @@ public class Coupon extends BaseEntity {
     @Column(name = "valid_days", nullable = false)
     private int validDays;
 
+    @Column(name = "total_limit")
+    private Integer totalLimit;
+
     protected Coupon() {}
 
     public Coupon(String name, CouponType type, int value, Integer minOrderAmount, int validDays) {
+        this(name, type, value, minOrderAmount, validDays, null);
+    }
+
+    public Coupon(String name, CouponType type, int value, Integer minOrderAmount, int validDays, Integer totalLimit) {
         if (name == null || name.isBlank()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "쿠폰 이름은 비어있을 수 없습니다.");
         }
@@ -49,6 +56,7 @@ public class Coupon extends BaseEntity {
         this.value = value;
         this.minOrderAmount = minOrderAmount;
         this.validDays = validDays;
+        this.totalLimit = totalLimit;
     }
 
     public void update(String name, Integer minOrderAmount) {
@@ -90,5 +98,9 @@ public class Coupon extends BaseEntity {
 
     public int getValidDays() {
         return validDays;
+    }
+
+    public Integer getTotalLimit() {
+        return totalLimit;
     }
 }

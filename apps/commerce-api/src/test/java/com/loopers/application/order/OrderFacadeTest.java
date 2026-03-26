@@ -45,7 +45,7 @@ class OrderFacadeTest {
         OrderService orderService = new OrderService(fakeOrderRepository);
         CouponService couponService = new CouponService(fakeCouponRepository, fakeUserCouponRepository);
 
-        orderFacade = new OrderFacade(productService, brandService, orderService, couponService);
+        orderFacade = new OrderFacade(productService, brandService, orderService, couponService, event -> {});
     }
 
     @DisplayName("주문 생성 시,")
