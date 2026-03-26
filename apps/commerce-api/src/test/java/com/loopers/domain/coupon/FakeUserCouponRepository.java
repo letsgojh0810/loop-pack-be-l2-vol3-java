@@ -52,4 +52,11 @@ public class FakeUserCouponRepository implements UserCouponRepository {
     public Optional<UserCoupon> findByIdForUpdate(Long id) {
         return Optional.ofNullable(store.get(id));
     }
+
+    @Override
+    public long countByCouponId(Long couponId) {
+        return store.values().stream()
+            .filter(uc -> uc.getCouponId().equals(couponId))
+            .count();
+    }
 }

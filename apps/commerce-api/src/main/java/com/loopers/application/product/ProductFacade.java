@@ -30,7 +30,8 @@ public class ProductFacade {
         Product product = productService.getProduct(productId);
         Brand brand = brandService.getBrand(product.getBrandId());
         boolean liked = userId != null && productLikeService.isLiked(userId, productId);
-        return ProductInfo.of(product, brand, product.getLikeCount(), liked);
+        long likeCount = productLikeService.getLikeCount(productId);
+        return ProductInfo.of(product, brand, likeCount, liked);
     }
 
     @Cacheable(

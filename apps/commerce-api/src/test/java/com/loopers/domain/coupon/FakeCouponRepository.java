@@ -31,4 +31,9 @@ public class FakeCouponRepository implements CouponRepository {
     public List<Coupon> findAll() {
         return new ArrayList<>(store.values());
     }
+
+    @Override
+    public Optional<Coupon> findByIdForUpdate(Long id) {
+        return Optional.ofNullable(store.get(id));
+    }
 }

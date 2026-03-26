@@ -20,4 +20,16 @@ public interface CouponV1ApiSpec {
         @Parameter(description = "로그인 ID", required = true) String loginId,
         @Parameter(description = "비밀번호", required = true) String password
     );
+
+    @Operation(summary = "선착순 쿠폰 발급 요청", description = "Kafka를 통해 비동기로 선착순 쿠폰 발급을 요청합니다.")
+    ApiResponse<CouponV1Dto.CouponIssueRequestResponse> requestCouponIssueAsync(
+        @Parameter(description = "로그인 ID", required = true) String loginId,
+        @Parameter(description = "비밀번호", required = true) String password,
+        @Parameter(description = "쿠폰 ID", required = true) Long couponId
+    );
+
+    @Operation(summary = "쿠폰 발급 요청 상태 조회", description = "비동기 쿠폰 발급 요청의 처리 상태를 조회합니다.")
+    ApiResponse<CouponV1Dto.CouponIssueRequestResponse> getIssueRequestStatus(
+        @Parameter(description = "발급 요청 ID", required = true) String requestId
+    );
 }
