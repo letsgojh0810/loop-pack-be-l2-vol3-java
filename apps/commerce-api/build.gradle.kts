@@ -28,6 +28,7 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+    testImplementation("org.springframework.kafka:spring-kafka-test")
 
     // arch test
     testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")

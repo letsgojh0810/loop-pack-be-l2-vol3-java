@@ -41,6 +41,11 @@ public class OutboxEvent {
     @Column
     private ZonedDateTime publishedAt;
 
+    private static final int MAX_RETRY = 3;
+
+    @Column(nullable = false)
+    private int retryCount = 0;
+
     protected OutboxEvent() {}
 
     public static OutboxEvent create(String eventId, String topic, String partitionKey, String payload) {
@@ -61,6 +66,14 @@ public class OutboxEvent {
 
     public void markFailed() {
         this.status = OutboxStatus.FAILED;
+    }
+
+    public void incrementRetry() {
+        this.retryCount++;
+    }
+
+    public boolean isMaxRetryExceeded() {
+        return this.retryCount >= MAX_RETRY;
     }
 
     public Long getId() {
@@ -85,6 +98,10 @@ public class OutboxEvent {
 
     public OutboxStatus getStatus() {
         return status;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
     }
 
     public ZonedDateTime getCreatedAt() {
