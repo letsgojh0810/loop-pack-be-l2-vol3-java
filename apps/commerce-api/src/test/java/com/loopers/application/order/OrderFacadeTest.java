@@ -11,12 +11,15 @@ import com.loopers.domain.order.OrderService;
 import com.loopers.domain.product.FakeProductRepository;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
+import com.loopers.domain.queue.QueueService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
@@ -45,7 +48,8 @@ class OrderFacadeTest {
         OrderService orderService = new OrderService(fakeOrderRepository);
         CouponService couponService = new CouponService(fakeCouponRepository, fakeUserCouponRepository);
 
-        orderFacade = new OrderFacade(productService, brandService, orderService, couponService, event -> {});
+        QueueService queueService = mock(QueueService.class);
+        orderFacade = new OrderFacade(productService, brandService, orderService, couponService, event -> {}, queueService);
     }
 
     @DisplayName("주문 생성 시,")
@@ -62,7 +66,7 @@ class OrderFacadeTest {
             List<OrderCreateItem> items = List.of(new OrderCreateItem(product.getId(), 2));
 
             // act
-            OrderInfo result = orderFacade.createOrder(USER_ID, items, null);
+            OrderInfo result = orderFacade.createOrder(USER_ID, items, null, null);
 
             // assert
             assertAll(
@@ -90,7 +94,7 @@ class OrderFacadeTest {
 
             // act
             CoreException result = assertThrows(CoreException.class, () ->
-                orderFacade.createOrder(USER_ID, items, null)
+                orderFacade.createOrder(USER_ID, items, null, null)
             );
 
             // assert
@@ -105,7 +109,7 @@ class OrderFacadeTest {
 
             // act
             CoreException result = assertThrows(CoreException.class, () ->
-                orderFacade.createOrder(USER_ID, items, null)
+                orderFacade.createOrder(USER_ID, items, null, null)
             );
 
             // assert
@@ -124,7 +128,7 @@ class OrderFacadeTest {
             Brand brand = fakeBrandRepository.save(new Brand("브랜드명", "브랜드 설명", "http://brand.url"));
             Product product = fakeProductRepository.save(new Product(brand.getId(), "상품명", "상품 설명", 3000, 10, "http://product.url"));
             List<OrderCreateItem> createItems = List.of(new OrderCreateItem(product.getId(), 1));
-            OrderInfo created = orderFacade.createOrder(USER_ID, createItems, null);
+            OrderInfo created = orderFacade.createOrder(USER_ID, createItems, null, null);
 
             // act
             OrderInfo result = orderFacade.getOrder(created.orderId());
@@ -148,8 +152,8 @@ class OrderFacadeTest {
             // arrange
             Brand brand = fakeBrandRepository.save(new Brand("브랜드명", "브랜드 설명", "http://brand.url"));
             Product product = fakeProductRepository.save(new Product(brand.getId(), "상품명", "상품 설명", 2000, 10, "http://product.url"));
-            orderFacade.createOrder(USER_ID, List.of(new OrderCreateItem(product.getId(), 1)), null);
-            orderFacade.createOrder(USER_ID, List.of(new OrderCreateItem(product.getId(), 1)), null);
+            orderFacade.createOrder(USER_ID, List.of(new OrderCreateItem(product.getId(), 1)), null, null);
+            orderFacade.createOrder(USER_ID, List.of(new OrderCreateItem(product.getId(), 1)), null, null);
 
             // act
             List<OrderInfo> results = orderFacade.getOrdersByUserId(USER_ID);

@@ -8,10 +8,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Order", description = "주문 API")
 public interface OrderV1ApiSpec {
 
-    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다.")
+    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다. 대기열 활성화 시 X-Entry-Token 헤더 필요.")
     ApiResponse<OrderV1Dto.OrderResponse> createOrder(
         @Parameter(description = "로그인 ID", required = true) String loginId,
         @Parameter(description = "비밀번호", required = true) String password,
+        @Parameter(description = "입장 토큰 (대기열 활성화 시 필수)") String entryToken,
         OrderV1Dto.CreateRequest request
     );
 

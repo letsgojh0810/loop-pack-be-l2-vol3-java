@@ -38,10 +38,11 @@ public class OrderV1Controller implements OrderV1ApiSpec {
     public ApiResponse<OrderV1Dto.OrderResponse> createOrder(
         @RequestHeader(HEADER_LOGIN_ID) String loginId,
         @RequestHeader(HEADER_LOGIN_PW) String password,
+        @RequestHeader(value = "X-Entry-Token", required = false) String entryToken,
         @Valid @RequestBody OrderV1Dto.CreateRequest request
     ) {
         UserInfo currentUser = userFacade.getMe(loginId, password);
-        OrderInfo info = orderFacade.createOrder(currentUser.id(), request.toOrderCreateItems(), request.couponId());
+        OrderInfo info = orderFacade.createOrder(currentUser.id(), request.toOrderCreateItems(), request.couponId(), entryToken);
         return ApiResponse.success(OrderV1Dto.OrderResponse.from(info));
     }
 
