@@ -8,6 +8,7 @@ import com.loopers.domain.order.OrderItem;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
+import com.loopers.domain.queue.QueueService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +28,11 @@ public class OrderFacade {
     private final OrderService orderService;
     private final CouponService couponService;
     private final ApplicationEventPublisher eventPublisher;
+    private final QueueService queueService;
 
     @Transactional
-    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId) {
+    public OrderInfo createOrder(Long userId, List<OrderCreateItem> items, Long couponId, String entryToken) {
+        queueService.validateToken(userId, entryToken);
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderCreateItem createItem : items) {
@@ -72,6 +75,7 @@ public class OrderFacade {
 
         OrderInfo orderInfo = OrderInfo.of(order, itemInfos);
         eventPublisher.publishEvent(new OrderCreatedEvent(order.getId(), userId));
+        queueService.deleteToken(userId);
         return orderInfo;
     }
 
