@@ -6,12 +6,16 @@ import com.loopers.domain.like.ProductLikeService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.ProductSort;
+import com.loopers.domain.ranking.RankingService;
 import com.loopers.infrastructure.cache.CacheConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +25,12 @@ import java.util.Map;
 @Component
 public class ProductFacade {
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+
     private final ProductService productService;
     private final BrandService brandService;
     private final ProductLikeService productLikeService;
+    private final RankingService rankingService;
 
     @Cacheable(cacheNames = CacheConfig.PRODUCT_DETAIL, key = "#productId")
     public ProductInfo getProductDetail(Long productId, Long userId) {
@@ -31,7 +38,9 @@ public class ProductFacade {
         Brand brand = brandService.getBrand(product.getBrandId());
         boolean liked = userId != null && productLikeService.isLiked(userId, productId);
         long likeCount = productLikeService.getLikeCount(productId);
-        return ProductInfo.of(product, brand, likeCount, liked);
+        String today = LocalDate.now().format(DATE_FORMATTER);
+        Long rank = rankingService.getRank(today, productId);
+        return ProductInfo.of(product, brand, likeCount, liked, rank);
     }
 
     @Cacheable(
