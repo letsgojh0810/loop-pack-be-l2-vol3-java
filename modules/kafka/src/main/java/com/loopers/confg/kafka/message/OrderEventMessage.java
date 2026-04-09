@@ -15,5 +15,5 @@ public record OrderEventMessage(
         long version
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Item(Long productId, int quantity) {}
+    public record Item(Long productId, int quantity, int price) {}
 }

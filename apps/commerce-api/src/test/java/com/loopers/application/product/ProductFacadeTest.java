@@ -8,6 +8,8 @@ import com.loopers.domain.like.ProductLikeService;
 import com.loopers.domain.product.FakeProductRepository;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductService;
+import com.loopers.domain.ranking.FakeRankingRepository;
+import com.loopers.domain.ranking.RankingService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,8 +40,9 @@ class ProductFacadeTest {
         BrandService brandService = new BrandService(fakeBrandRepository);
         ProductService productService = new ProductService(fakeProductRepository);
         productLikeService = new ProductLikeService(fakeProductLikeRepository);
+        RankingService rankingService = new RankingService(new FakeRankingRepository());
 
-        productFacade = new ProductFacade(productService, brandService, productLikeService);
+        productFacade = new ProductFacade(productService, brandService, productLikeService, rankingService);
     }
 
     @DisplayName("상품 상세 조회 시,")

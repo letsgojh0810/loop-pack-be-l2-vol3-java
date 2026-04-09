@@ -46,6 +46,16 @@ public class KafkaConfig {
         return new KafkaTemplate<>(producerFactory);
     }
 
+    @Bean(name = "stringKafkaTemplate")
+    public KafkaTemplate<String, String> stringKafkaTemplate(KafkaProperties kafkaProperties) {
+        Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties());
+        props.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                org.apache.kafka.common.serialization.StringSerializer.class);
+        props.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                org.apache.kafka.common.serialization.StringSerializer.class);
+        return new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(props));
+    }
+
     @Bean
     public ByteArrayJsonMessageConverter jsonMessageConverter(ObjectMapper objectMapper) {
         return new ByteArrayJsonMessageConverter(objectMapper);
