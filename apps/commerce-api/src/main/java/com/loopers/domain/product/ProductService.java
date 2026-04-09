@@ -32,6 +32,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public List<Product> getProductsByIds(List<Long> ids) {
+        return productRepository.findAllByIds(ids);
+    }
+
+    @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
         return productRepository.findAllOrderByLikeCountDesc();
     }

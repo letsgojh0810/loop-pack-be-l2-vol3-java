@@ -13,7 +13,8 @@ public record ProductInfo(
     Long brandId,
     String brandName,
     long likeCount,
-    boolean liked
+    boolean liked,
+    Long rank
 ) {
     public static ProductInfo of(Product product, Brand brand, long likeCount, boolean liked) {
         return new ProductInfo(
@@ -26,7 +27,24 @@ public record ProductInfo(
             brand.getId(),
             brand.getName(),
             likeCount,
-            liked
+            liked,
+            null
+        );
+    }
+
+    public static ProductInfo of(Product product, Brand brand, long likeCount, boolean liked, Long rank) {
+        return new ProductInfo(
+            product.getId(),
+            product.getName(),
+            product.getDescription(),
+            product.getPrice(),
+            product.getStock(),
+            product.getImageUrl(),
+            brand.getId(),
+            brand.getName(),
+            likeCount,
+            liked,
+            rank
         );
     }
 }
